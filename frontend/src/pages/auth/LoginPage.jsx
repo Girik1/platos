@@ -24,7 +24,10 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const user = await login(email, password);
-      if (user.role === 'admin') navigate('/admin/dashboard');
+      if (user.role === 'super_admin') navigate('/super-admin');
+      else if (user.role === 'org_admin') navigate('/org-admin');
+      else if (user.role === 'kitchen_staff') navigate('/kitchen');
+      else if (user.role === 'admin') navigate('/admin/dashboard');
       else if (user.role === 'vendor') navigate('/vendor/dashboard');
       else navigate(from === '/login' ? '/' : from);
     } catch (err) {
@@ -40,7 +43,10 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const user = await login(demoEmail, demoPassword);
-      if (user.role === 'admin') navigate('/admin/dashboard');
+      if (user.role === 'super_admin') navigate('/super-admin');
+      else if (user.role === 'org_admin') navigate('/org-admin');
+      else if (user.role === 'kitchen_staff') navigate('/kitchen');
+      else if (user.role === 'admin') navigate('/admin/dashboard');
       else if (user.role === 'vendor') navigate('/vendor/dashboard');
       else navigate('/');
     } catch (err) {
@@ -69,30 +75,60 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
           {/* Quick Demo Logins Pill */}
           <div className="mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" /> Quick Demo Logins:
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" /> 1-Tap Demo Roles:
+              </span>
+              <span className="text-[10px] text-gray-400 font-normal">Click to test instantly</span>
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleDemoLogin('user1@platos.com', 'user123')}
-                className="px-2.5 py-1.5 text-xs font-medium bg-white hover:bg-orange-50 text-gray-700 hover:text-[#FF6B35] border border-gray-200 rounded-lg transition-colors text-center shadow-xs"
+                onClick={() => handleDemoLogin('superadmin@platos.com', 'admin123')}
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-slate-900 hover:text-white text-slate-800 border border-slate-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
               >
-                👤 Employee
+                <span>👑 Super Admin</span>
+                <span className="text-[9px] text-gray-400 font-normal">HQ Platform</span>
               </button>
               <button
                 type="button"
-                onClick={() => handleDemoLogin('vendor1@platos.com', 'vendor123')}
-                className="px-2.5 py-1.5 text-xs font-medium bg-white hover:bg-orange-50 text-gray-700 hover:text-[#FF6B35] border border-gray-200 rounded-lg transition-colors text-center shadow-xs"
+                onClick={() => handleDemoLogin('orgadmin@platos.com', 'admin123')}
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-slate-900 hover:text-white text-slate-800 border border-slate-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
               >
-                🍳 Vendor
+                <span>🏢 Org Admin</span>
+                <span className="text-[9px] text-gray-400 font-normal">TechCorp HR</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin@platos.com', 'admin123')}
-                className="px-2.5 py-1.5 text-xs font-medium bg-white hover:bg-blue-50 text-gray-700 hover:text-[#004E89] border border-gray-200 rounded-lg transition-colors text-center shadow-xs"
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-blue-50 text-gray-700 hover:text-[#004E89] border border-gray-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
               >
-                ⚡ Admin
+                <span>⚡ Facility Lead</span>
+                <span className="text-[9px] text-gray-400 font-normal">Cafeteria Admin</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('vendor1@platos.com', 'vendor123')}
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-orange-50 text-gray-700 hover:text-[#FF6B35] border border-gray-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
+              >
+                <span>🍳 Vendor Partner</span>
+                <span className="text-[9px] text-gray-400 font-normal">Annapurna Kitchen</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('kitchen1@platos.com', 'vendor123')}
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-orange-50 text-gray-700 hover:text-[#FF6B35] border border-gray-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
+              >
+                <span>👨‍🍳 Kitchen KDS</span>
+                <span className="text-[9px] text-gray-400 font-normal">Live POS Queue</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('user1@platos.com', 'user123')}
+                className="px-2 py-2 text-xs font-semibold bg-white hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 border border-gray-200 rounded-lg transition-all text-left shadow-xs flex flex-col"
+              >
+                <span>👤 Employee</span>
+                <span className="text-[9px] text-gray-400 font-normal">Food Wallet Active</span>
               </button>
             </div>
           </div>

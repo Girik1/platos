@@ -21,6 +21,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Super admin has universal access to all portals
+    if (user.role === 'super_admin') return <Navigate to="/super-admin" replace />;
+    if (user.role === 'org_admin') return <Navigate to="/org-admin" replace />;
+    if (user.role === 'kitchen_staff') return <Navigate to="/kitchen" replace />;
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     if (user.role === 'vendor') return <Navigate to="/vendor/dashboard" replace />;
     return <Navigate to="/" replace />;

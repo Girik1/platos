@@ -30,6 +30,7 @@ export default function HomePage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [dietaryFilter, setDietaryFilter] = useState('all'); // 'all', 'veg', 'nonveg'
   const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function HomePage() {
     return { name: 'Dinner & Café', hours: '07:00 - 10:00 PM', emoji: '☕' };
   }, []);
 
-  // Filter items based on active category and search
+  // Filter items based on active category, search, and dietary preference
   const filteredItems = useMemo(() => {
     let result = popularItems;
 
@@ -80,8 +81,14 @@ export default function HomePage() {
       );
     }
 
+    if (dietaryFilter === 'veg') {
+      result = result.filter(item => Number(item.is_veg) === 1);
+    } else if (dietaryFilter === 'nonveg') {
+      result = result.filter(item => Number(item.is_veg) === 0);
+    }
+
     return result;
-  }, [popularItems, searchQuery, activeCategory]);
+  }, [popularItems, searchQuery, activeCategory, dietaryFilter]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -207,9 +214,9 @@ export default function HomePage() {
       {/* Main Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
-        {/* Category Filter Pills (Height 40px, mathematically engineered) */}
-        <section>
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* Category & Dietary Filter Pills */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.id;
               return (
@@ -230,6 +237,46 @@ export default function HomePage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Quick Dietary Preference Toggles */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Diet:</span>
+            <button
+              type="button"
+              onClick={() => setDietaryFilter('all')}
+              className={`h-7 px-3 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                dietaryFilter === 'all'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All Types
+            </button>
+            <button
+              type="button"
+              onClick={() => setDietaryFilter('veg')}
+              className={`h-7 px-3 rounded-lg font-bold text-[11px] transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                dietaryFilter === 'veg'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              Pure Veg
+            </button>
+            <button
+              type="button"
+              onClick={() => setDietaryFilter('nonveg')}
+              className={`h-7 px-3 rounded-lg font-bold text-[11px] transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                dietaryFilter === 'nonveg'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-red-50 text-red-800 hover:bg-red-100'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-red-400" />
+              Non-Veg
+            </button>
           </div>
         </section>
 

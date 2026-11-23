@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Building2, ShieldCheck, CheckCircle2, Wallet, CreditCard, Banknote, QrCode } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Building2, ShieldCheck, CheckCircle2, Wallet, CreditCard, Banknote, QrCode, Clock } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import VegBadge from '../../components/common/VegBadge';
@@ -21,6 +21,7 @@ export default function CartPage() {
   } = useCart();
 
   const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [pickupSlot, setPickupSlot] = useState('asap');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [placing, setPlacing] = useState(false);
 
@@ -92,9 +93,20 @@ export default function CartPage() {
 
     try {
       setPlacing(true);
+      const slotLabel = {
+        asap: 'ASAP (~10-15 mins)',
+        lunch_a: 'Lunch 12:30 PM - 01:00 PM',
+        lunch_b: 'Lunch 01:00 PM - 01:30 PM',
+        lunch_c: 'Lunch 01:30 PM - 02:00 PM',
+        snacks: 'Snacks 04:30 PM - 05:00 PM',
+        dinner: 'Dinner 07:30 PM - 08:15 PM',
+      }[pickupSlot] || pickupSlot;
+
+      const fullInstructions = `[Slot: ${slotLabel}] ${specialInstructions}`.trim();
+
       const res = await API.post('/orders', {
         payment_method: paymentMethod,
-        special_instructions: specialInstructions,
+        special_instructions: fullInstructions,
         items: items,
       });
 
@@ -256,6 +268,42 @@ export default function CartPage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Pre-Order & Scheduled Meal Slot */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#FF6B35]" /> Pickup & Pre-Order Timing
+                </label>
+                <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Zero Queue Wait
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { id: 'asap', label: '⚡ ASAP (~12m)', sub: 'Ready fresh now' },
+                  { id: 'lunch_a', label: '🍛 12:30 - 01:00 PM', sub: 'Lunch Slot A' },
+                  { id: 'lunch_b', label: '🍛 01:00 - 01:30 PM', sub: 'Lunch Slot B' },
+                  { id: 'lunch_c', label: '🍛 01:30 - 02:00 PM', sub: 'Lunch Slot C' },
+                  { id: 'snacks', label: '🍿 04:30 - 05:00 PM', sub: 'Tea / Snack Break' },
+                  { id: 'dinner', label: '🌙 07:30 - 08:15 PM', sub: 'Evening Shift Dinner' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setPickupSlot(s.id)}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      pickupSlot === s.id
+                        ? 'border-[#FF6B35] bg-orange-50/70 text-gray-900 shadow-xs'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600 bg-white'
+                    }`}
+                  >
+                    <p className="text-xs font-bold leading-tight">{s.label}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{s.sub}</p>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Special Preparation Instructions for Kitchen */}

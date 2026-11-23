@@ -12,22 +12,54 @@ import {
   UtensilsCrossed,
   Wallet,
   Building2,
+  Sparkles,
+  ChevronDown,
+  Clock,
+  Sliders,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, login } = useAuth();
   const { cartCount, cartTotal } = useCart();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const roleRef = useRef(null);
+
+  // Demo personas for 1-tap switching anywhere
+  const demoPersonas = [
+    { label: 'Super Admin', email: 'superadmin@platos.com', pw: 'admin123', role: 'super_admin', badge: 'HQ Platform', path: '/super-admin' },
+    { label: 'Corporate Admin', email: 'orgadmin@platos.com', pw: 'admin123', role: 'org_admin', badge: 'TechCorp HR', path: '/org-admin' },
+    { label: 'Cafeteria Manager', email: 'admin@platos.com', pw: 'admin123', role: 'admin', badge: 'Facility Lead', path: '/admin/dashboard' },
+    { label: 'Food Vendor Partner', email: 'vendor1@platos.com', pw: 'vendor123', role: 'vendor', badge: 'Annapurna Kitchen', path: '/vendor/dashboard' },
+    { label: 'Kitchen Chef (KDS)', email: 'kitchen1@platos.com', pw: 'vendor123', role: 'kitchen_staff', badge: 'Live Kitchen POS', path: '/kitchen' },
+    { label: 'Employee / Customer', email: 'user1@platos.com', pw: 'user123', role: 'customer', badge: 'Rahul (TechCorp)', path: '/' },
+  ];
+
+  const handleSwitchPersona = async (persona) => {
+    try {
+      await login(persona.email, persona.pw);
+      setRoleSwitcherOpen(false);
+      navigate(persona.path);
+      toast.success(`Switched role to ${persona.label}`);
+    } catch (_) {
+      toast.error('Failed to switch persona');
+    }
+  };
 
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
+      }
+      if (roleRef.current && !roleRef.current.contains(e.target)) {
+        setRoleSwitcherOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -43,6 +75,9 @@ export default function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return '/';
+    if (user.role === 'super_admin') return '/super-admin';
+    if (user.role === 'org_admin') return '/org-admin';
+    if (user.role === 'kitchen_staff') return '/kitchen';
     if (user.role === 'vendor') return '/vendor/dashboard';
     if (user.role === 'admin') return '/admin/dashboard';
     return '/';
@@ -69,6 +104,69 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
+            {user?.role === 'super_admin' && (
+              <>
+                <Link
+                  to="/super-admin"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  SaaS Command Center
+                </Link>
+                <Link
+                  to="/finance/settlements"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Global Settlements
+                </Link>
+                <Link
+                  to="/admin/vendors"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Cafeterias
+                </Link>
+              </>
+            )}
+
+            {user?.role === 'org_admin' && (
+              <>
+                <Link
+                  to="/org-admin"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Company Overview
+                </Link>
+                <Link
+                  to="/org-admin"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Campus Cafeterias
+                </Link>
+                <Link
+                  to="/org-admin"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Meal Subsidies
+                </Link>
+              </>
+            )}
+
+            {user?.role === 'kitchen_staff' && (
+              <>
+                <Link
+                  to="/kitchen"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Kitchen POS Display
+                </Link>
+                <Link
+                  to="/vendor/orders"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Order Handover
+                </Link>
+              </>
+            )}
+
             {user?.role === 'customer' && (
               <>
                 <Link
@@ -82,6 +180,12 @@ export default function Navbar() {
                   className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
                 >
                   My Orders
+                </Link>
+                <Link
+                  to="/wallet"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Food Wallet
                 </Link>
               </>
             )}
@@ -105,6 +209,12 @@ export default function Navbar() {
                   className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
                 >
                   Menu & Pricing
+                </Link>
+                <Link
+                  to="/finance/settlements"
+                  className="h-9 px-3.5 rounded-lg text-xs font-bold text-gray-700 hover:text-[#FF6B35] hover:bg-orange-50/50 flex items-center transition-colors"
+                >
+                  Payouts
                 </Link>
               </>
             )}
@@ -140,16 +250,76 @@ export default function Navbar() {
           </div>
 
           {/* Right Action Icons & User Dropdown */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Interactive Persona Switcher Pill */}
+            <div className="relative" ref={roleRef}>
+              <button
+                type="button"
+                onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
+                className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                title="Click to switch live testing personas"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                <span className="hidden sm:inline text-slate-300 font-medium">Role:</span>
+                <span className="capitalize">{user?.role?.replace('_', ' ') || 'Demo'}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+
+              {roleSwitcherOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 text-slate-900 animate-in fade-in duration-150">
+                  <div className="px-3.5 py-2 border-b border-gray-100">
+                    <p className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                      Interactive Role Switcher
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      1-click switch between all 6 stakeholder roles
+                    </p>
+                  </div>
+                  <div className="py-1 max-h-72 overflow-y-auto">
+                    {demoPersonas.map((p) => {
+                      const isActive = user?.email === p.email;
+                      return (
+                        <button
+                          key={p.email}
+                          type="button"
+                          onClick={() => handleSwitchPersona(p)}
+                          className={`w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-orange-50/50 transition-colors cursor-pointer ${
+                            isActive ? 'bg-orange-50 border-l-3 border-[#FF6B35]' : ''
+                          }`}
+                        >
+                          <div>
+                            <p className="text-xs font-bold text-gray-900 leading-tight">
+                              {p.label}
+                            </p>
+                            <p className="text-[10px] text-gray-400">{p.badge}</p>
+                          </div>
+                          {isActive ? (
+                            <span className="text-[10px] font-black text-orange-600 px-1.5 py-0.5 rounded bg-orange-100">
+                              ACTIVE
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-gray-400">
+                              Switch →
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Employee Wallet Balance Badge */}
             {isAuthenticated && user?.role === 'customer' && (
-              <div
+              <Link
+                to="/wallet"
                 title="Employee Cafeteria Wallet"
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-extrabold tabular-nums select-none"
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100/80 border border-emerald-200/80 text-xs font-extrabold tabular-nums select-none transition-colors"
               >
                 <Wallet className="w-3.5 h-3.5 text-emerald-600" />
                 <span>₹{Number(user.wallet_balance || 0).toFixed(0)}</span>
-              </div>
+              </Link>
             )}
 
             {/* Cart Icon & Badge */}
@@ -214,14 +384,73 @@ export default function Navbar() {
                         <UserCircle className="w-4 h-4 text-gray-400" /> My Profile
                       </Link>
 
+                      {user?.role === 'super_admin' && (
+                        <>
+                          <Link
+                            to="/super-admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-orange-500" /> SaaS Command Center
+                          </Link>
+                          <Link
+                            to="/finance/settlements"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <CreditCard className="w-4 h-4 text-orange-500" /> Global Settlements
+                          </Link>
+                        </>
+                      )}
+
+                      {user?.role === 'org_admin' && (
+                        <>
+                          <Link
+                            to="/org-admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <Building2 className="w-4 h-4 text-orange-500" /> Company Overview
+                          </Link>
+                        </>
+                      )}
+
+                      {user?.role === 'kitchen_staff' && (
+                        <>
+                          <Link
+                            to="/kitchen"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <Clock className="w-4 h-4 text-orange-500" /> Kitchen POS Display
+                          </Link>
+                          <Link
+                            to="/vendor/orders"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <Package className="w-4 h-4 text-orange-500" /> Handover Orders
+                          </Link>
+                        </>
+                      )}
+
                       {user?.role === 'customer' && (
-                        <Link
-                          to="/orders"
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          <Package className="w-4 h-4 text-gray-400" /> Order History
-                        </Link>
+                        <>
+                          <Link
+                            to="/orders"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <Package className="w-4 h-4 text-gray-400" /> Order History
+                          </Link>
+                          <Link
+                            to="/wallet"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            <Wallet className="w-4 h-4 text-emerald-500" /> Food Wallet & Subsidies
+                          </Link>
+                        </>
                       )}
 
                       {user?.role === 'vendor' && (
@@ -325,6 +554,61 @@ export default function Navbar() {
 
               {/* Navigation Options */}
               <div className="space-y-1">
+                {user?.role === 'super_admin' && (
+                  <>
+                    <Link
+                      to="/super-admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-orange-500" />
+                      <span>SaaS Command Center</span>
+                    </Link>
+                    <Link
+                      to="/finance/settlements"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <CreditCard className="w-4 h-4 text-orange-500" />
+                      <span>Global Settlements</span>
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'org_admin' && (
+                  <>
+                    <Link
+                      to="/org-admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Building2 className="w-4 h-4 text-orange-500" />
+                      <span>Company Overview & Subsidies</span>
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'kitchen_staff' && (
+                  <>
+                    <Link
+                      to="/kitchen"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Clock className="w-4 h-4 text-orange-500" />
+                      <span>Kitchen POS Display</span>
+                    </Link>
+                    <Link
+                      to="/vendor/orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-orange-500" />
+                      <span>Order Handover</span>
+                    </Link>
+                  </>
+                )}
+
                 {user?.role === 'customer' && (
                   <>
                     <Link
@@ -342,6 +626,14 @@ export default function Navbar() {
                     >
                       <Package className="w-4 h-4 text-orange-500" />
                       <span>My Orders & Live Pickup</span>
+                    </Link>
+                    <Link
+                      to="/wallet"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Wallet className="w-4 h-4 text-emerald-500" />
+                      <span>Employee Wallet & Top-Up</span>
                     </Link>
                     <Link
                       to="/profile"

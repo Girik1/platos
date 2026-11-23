@@ -33,9 +33,17 @@ if (!fs.existsSync(uploadsDir)) {
 
 // ── Initialize DB & Seed ──
 initializeDatabase();
-if (isDatabaseEmpty()) {
-  console.log('📦 Database is empty. Running seed...');
-  runSeed(db);
+try {
+  const orgCount = db.prepare('SELECT COUNT(*) as count FROM organizations').get().count;
+  if (orgCount === 0) {
+    console.log('📦 Seeding Enterprise SaaS models...');
+    runSeed(db);
+  }
+} catch (e) {
+  if (isDatabaseEmpty()) {
+    console.log('📦 Database is empty. Running seed...');
+    runSeed(db);
+  }
 }
 
 // ── Routes ──
@@ -46,6 +54,11 @@ app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/superadmin', require('./routes/superadmin'));
+app.use('/api/organizations', require('./routes/organizations'));
+app.use('/api/cafeterias', require('./routes/cafeterias'));
+app.use('/api/kitchen', require('./routes/kitchen'));
+app.use('/api/finance', require('./routes/finance'));
 
 // ── Health check ──
 app.get('/api/health', (req, res) => {

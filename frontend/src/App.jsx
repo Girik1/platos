@@ -1,7 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
+
+// Enterprise Layout
+import EnterpriseLayout from './components/layout/EnterpriseLayout';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -14,11 +17,16 @@ import CartPage from './pages/customer/CartPage';
 import OrdersPage from './pages/customer/OrdersPage';
 import OrderTrackingPage from './pages/customer/OrderTrackingPage';
 import ProfilePage from './pages/customer/ProfilePage';
+import WalletPage from './pages/customer/WalletPage';
 
 // Vendor Pages
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorOrders from './pages/vendor/VendorOrders';
 import VendorMenu from './pages/vendor/VendorMenu';
+import VendorSettlements from './pages/vendor/VendorSettlements';
+
+// Kitchen KDS Page
+import KitchenDisplayPage from './pages/kitchen/KitchenDisplayPage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -26,10 +34,28 @@ import AdminVendors from './pages/admin/AdminVendors';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 
+// Super Admin & Org Admin Pages
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
+import OrgAdminDashboard from './pages/orgadmin/OrgAdminDashboard';
+
 export default function App() {
+  const location = useLocation();
+
+  // Route paths that use EnterpriseLayout
+  const isEnterprisePortal = [
+    '/super-admin',
+    '/org-admin',
+    '/kitchen',
+    '/wallet',
+    '/finance',
+  ].some((p) => location.pathname.startsWith(p));
+
+  const allRoles = ['customer', 'vendor', 'admin', 'org_admin', 'super_admin', 'kitchen_staff'];
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans antialiased">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-gray-900 font-sans antialiased">
+      {/* Consumer Header & Navigation (hidden in full Enterprise Portal views) */}
+      {!isEnterprisePortal && <Navbar />}
 
       <main className="flex-1">
         <Routes>
@@ -39,11 +65,11 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/vendor/:id" element={<MenuPage />} />
 
-          {/* Customer Protected Routes */}
+          {/* Customer Ordering Protected Routes */}
           <Route
             path="/cart"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={allRoles}>
                 <CartPage />
               </ProtectedRoute>
             }
@@ -51,7 +77,7 @@ export default function App() {
           <Route
             path="/orders"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={allRoles}>
                 <OrdersPage />
               </ProtectedRoute>
             }
@@ -59,7 +85,7 @@ export default function App() {
           <Route
             path="/orders/:id"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={allRoles}>
                 <OrderTrackingPage />
               </ProtectedRoute>
             }
@@ -67,8 +93,32 @@ export default function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={allRoles}>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Employee Wallet & Corporate Subsidies */}
+          <Route
+            path="/wallet"
+            element={
+              <ProtectedRoute allowedRoles={allRoles}>
+                <EnterpriseLayout>
+                  <WalletPage />
+                </EnterpriseLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Kitchen Display System (KDS) */}
+          <Route
+            path="/kitchen"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen_staff', 'vendor', 'admin', 'super_admin']}>
+                <EnterpriseLayout>
+                  <KitchenDisplayPage />
+                </EnterpriseLayout>
               </ProtectedRoute>
             }
           />
@@ -77,7 +127,7 @@ export default function App() {
           <Route
             path="/vendor/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={['vendor', 'admin', 'super_admin']}>
                 <VendorDashboard />
               </ProtectedRoute>
             }
@@ -85,7 +135,7 @@ export default function App() {
           <Route
             path="/vendor/orders"
             element={
-              <ProtectedRoute allowedRoles={['vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={['vendor', 'kitchen_staff', 'admin', 'super_admin']}>
                 <VendorOrders />
               </ProtectedRoute>
             }
@@ -93,17 +143,29 @@ export default function App() {
           <Route
             path="/vendor/menu"
             element={
-              <ProtectedRoute allowedRoles={['vendor', 'admin']}>
+              <ProtectedRoute allowedRoles={['vendor', 'admin', 'super_admin']}>
                 <VendorMenu />
               </ProtectedRoute>
             }
           />
 
-          {/* Admin Protected Routes */}
+          {/* Financial Settlements & Payouts */}
+          <Route
+            path="/finance/settlements"
+            element={
+              <ProtectedRoute allowedRoles={['vendor', 'admin', 'super_admin', 'org_admin']}>
+                <EnterpriseLayout>
+                  <VendorSettlements />
+                </EnterpriseLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Cafeteria Facility Admin Protected Routes */}
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
@@ -111,7 +173,7 @@ export default function App() {
           <Route
             path="/admin/vendors"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <AdminVendors />
               </ProtectedRoute>
             }
@@ -119,7 +181,7 @@ export default function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin', 'org_admin']}>
                 <AdminUsers />
               </ProtectedRoute>
             }
@@ -127,8 +189,52 @@ export default function App() {
           <Route
             path="/admin/orders"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Super Admin Platform SaaS Routes */}
+          <Route
+            path="/super-admin"
+            element={
+              <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                <EnterpriseLayout>
+                  <SuperAdminDashboard />
+                </EnterpriseLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/super-admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                <EnterpriseLayout>
+                  <SuperAdminDashboard />
+                </EnterpriseLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Organization / Corporate Admin Routes */}
+          <Route
+            path="/org-admin"
+            element={
+              <ProtectedRoute allowedRoles={['org_admin', 'super_admin', 'admin']}>
+                <EnterpriseLayout>
+                  <OrgAdminDashboard />
+                </EnterpriseLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/org-admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['org_admin', 'super_admin', 'admin']}>
+                <EnterpriseLayout>
+                  <OrgAdminDashboard />
+                </EnterpriseLayout>
               </ProtectedRoute>
             }
           />
@@ -138,7 +244,8 @@ export default function App() {
         </Routes>
       </main>
 
-      <Footer />
+      {/* Consumer Footer (hidden in full Enterprise Portal views) */}
+      {!isEnterprisePortal && <Footer />}
     </div>
   );
 }

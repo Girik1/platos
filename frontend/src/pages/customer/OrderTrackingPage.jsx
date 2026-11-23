@@ -13,7 +13,12 @@ import {
   RefreshCw,
   Copy,
   Receipt,
-  AlertCircle
+  AlertCircle,
+  Printer,
+  FileText,
+  X,
+  Building2,
+  ShieldCheck,
 } from 'lucide-react';
 import API from '../../api/axios';
 import OrderStatusBadge from '../../components/common/OrderStatusBadge';
@@ -33,6 +38,7 @@ export default function OrderTrackingPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -243,16 +249,26 @@ export default function OrderTrackingPage() {
 
         {/* Order Items & Receipt */}
         <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 mb-4 gap-2">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
               <Receipt className="w-4 h-4 text-[#FF6B35]" /> Order Details & Receipt
             </h3>
-            <span className="text-xs text-gray-400">
-              {new Date(order.created_at).toLocaleString('en-IN', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-              })}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400">
+                {new Date(order.created_at).toLocaleString('en-IN', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => setInvoiceModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-orange-400" />
+                <span>Tax Invoice</span>
+              </button>
+            </div>
           </div>
 
           {/* Items list */}
@@ -315,6 +331,116 @@ export default function OrderTrackingPage() {
           )}
         </div>
       </div>
+
+      {/* Official Tax Invoice & Subsidy Certificate Modal */}
+      {invoiceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-150">
+            <button
+              type="button"
+              onClick={() => setInvoiceModalOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Printable Tax Invoice Container */}
+            <div id="tax-invoice-printable" className="space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white font-black">
+                    <ChefHat className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 tracking-tight">Platos Cafeteria</h2>
+                    <p className="text-[10px] text-slate-500 font-medium">Enterprise Dining Solutions • GSTIN: 29AAAAA0000A1Z5</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    TAX INVOICE
+                  </span>
+                  <p className="text-xs font-mono font-bold text-slate-700 mt-1">#INV-{order.id.toString().padStart(6, '0')}</p>
+                </div>
+              </div>
+
+              {/* Order Metadata Info */}
+              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Billed To (Employee):</span>
+                  <p className="font-extrabold text-slate-800 mt-0.5">{order.user_name || 'Corporate Employee'}</p>
+                  <p className="text-slate-500">{order.user_email || 'Verified Staff'}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cafeteria Facility:</span>
+                  <p className="font-extrabold text-slate-800 mt-0.5">{order.vendor_name || 'Campus Central Food Court'}</p>
+                  <p className="text-slate-500">{new Date(order.created_at).toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-3">Item Description</th>
+                      <th className="p-3 text-center">Qty</th>
+                      <th className="p-3 text-right">Unit Rate</th>
+                      <th className="p-3 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {order.items?.map((item, i) => (
+                      <tr key={i}>
+                        <td className="p-3 font-semibold text-slate-800">{item.item_name}</td>
+                        <td className="p-3 text-center text-slate-600">{item.quantity}</td>
+                        <td className="p-3 text-right text-slate-600">₹{Number(item.item_price).toFixed(0)}</td>
+                        <td className="p-3 text-right font-bold text-slate-900">₹{(Number(item.item_price) * item.quantity).toFixed(0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Financial Breakup */}
+              <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-200">
+                <div className="flex justify-between">
+                  <span>Gross Item Total</span>
+                  <span className="font-bold">₹{Number(order.total_amount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-slate-500 text-[11px]">
+                  <span>CGST (2.5%) + SGST (2.5%) Inclusive</span>
+                  <span>₹{((Number(order.total_amount) * 5) / 105).toFixed(2)}</span>
+                </div>
+                {order.subsidy_amount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-bold">
+                    <span>Corporate Employer Subsidy Disbursed</span>
+                    <span>-₹{Number(order.subsidy_amount).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
+                  <span>Net Amount Paid</span>
+                  <span>₹{Math.max(0, order.total_amount - (order.subsidy_amount || 0)).toFixed(2)}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">Payment Method: <span className="uppercase font-bold text-slate-600">{order.payment_method || 'Corporate Wallet'}</span> • Status: <span className="text-emerald-600 font-bold">Verified</span></p>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 print:hidden">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e55a28] text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print / Save Tax Invoice</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

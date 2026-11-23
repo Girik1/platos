@@ -3,20 +3,59 @@ const bcrypt = require('bcryptjs');
 function runSeed(db) {
   const hash = (pw) => bcrypt.hashSync(pw, 10);
 
-  // ── Users ──
-  const insertUser = db.prepare('INSERT INTO users (name, email, phone, password_hash, role, company, wallet_balance) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  // ── Organizations ──
+  const insertOrg = db.prepare(`
+    INSERT OR IGNORE INTO organizations (name, code, domain, logo, contact_email, contact_phone, address, subscription_tier, subscription_status, monthly_budget, commission_rate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
 
-  insertUser.run('Admin', 'admin@platos.com', '9000000000', hash('admin123'), 'admin', 'Platos Corp', 10000);
-  insertUser.run('Annapurna Kitchen', 'vendor1@platos.com', '9100000001', hash('vendor123'), 'vendor', null, 0);
-  insertUser.run('Spice Route Café', 'vendor2@platos.com', '9100000002', hash('vendor123'), 'vendor', null, 0);
-  insertUser.run('Rahul Sharma', 'user1@platos.com', '9200000001', hash('user123'), 'customer', 'TechCorp', 500);
-  insertUser.run('Priya Patel', 'user2@platos.com', '9200000002', hash('user123'), 'customer', 'TechCorp', 750);
-  insertUser.run('Amit Kumar', 'user3@platos.com', '9200000003', hash('user123'), 'customer', 'DesignHub', 300);
+  insertOrg.run('TechCorp Global', 'TC-BLR', 'techcorp.com', 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=200&auto=format&fit=crop&q=80', 'facilities@techcorp.com', '+91 80 4920 1000', 'TechPark Tower 3, Whitefield, Bengaluru', 'Enterprise', 'active', 500000, 5.0);
+  insertOrg.run('Apex Health & Sciences', 'APX-DEL', 'apexhealth.org', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=200&auto=format&fit=crop&q=80', 'admin@apexhealth.org', '+91 11 2650 4000', 'Institutional Area, Sector 44, Gurugram', 'Growth', 'active', 350000, 5.0);
+  insertOrg.run('Infosys Digital Campus', 'INF-PUN', 'infosys.com', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&auto=format&fit=crop&q=80', 'cafeteria@infosys.com', '+91 20 6600 2000', 'Hinjawadi Phase 2, Pune', 'Enterprise', 'active', 750000, 4.5);
+
+  // ── Cafeterias ──
+  const insertCafeteria = db.prepare(`
+    INSERT OR IGNORE INTO cafeterias (org_id, name, code, location_building, floor, capacity, is_active, opening_time, closing_time)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insertCafeteria.run(1, 'Central Food Court & Bistro', 'TC-CFC-01', 'Tower 3 Main Wing', 'Ground Floor', 450, 1, '07:30', '22:00');
+  insertCafeteria.run(1, 'Executive Sky Lounge & Café', 'TC-SKY-02', 'Tower 3 Sky Deck', '14th Floor', 120, 1, '08:00', '20:00');
+  insertCafeteria.run(2, 'Apex MediPark Diner', 'APX-DIN-01', 'Block B Science Wing', '1st Floor', 300, 1, '07:00', '23:00');
+  insertCafeteria.run(3, 'Heritage Greens Food Hall', 'INF-HGF-01', 'Hub Building 2', 'Ground Floor', 600, 1, '07:30', '22:30');
+
+  // ── Departments ──
+  const insertDept = db.prepare('INSERT OR IGNORE INTO departments (org_id, name, budget_limit) VALUES (?, ?, ?)');
+  insertDept.run(1, 'Engineering & Tech', 180000);
+  insertDept.run(1, 'Product & Design', 90000);
+  insertDept.run(1, 'Sales & Enterprise Relations', 120000);
+  insertDept.run(1, 'Human Resources & People', 60000);
+  insertDept.run(2, 'Clinical Research & Lab', 150000);
+  insertDept.run(3, 'Digital Infrastructure', 250000);
+
+  // ── Users ──
+  const insertUser = db.prepare(`
+    INSERT OR IGNORE INTO users (name, email, phone, password_hash, role, company, org_id, department_id, employee_id, wallet_balance)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insertUser.run('Global Super Admin', 'superadmin@platos.com', '9000000001', hash('admin123'), 'super_admin', 'Platos Platform HQ', null, null, 'HQ-001', 50000);
+  insertUser.run('Kavita Nair (Org Admin)', 'orgadmin@platos.com', '9000000002', hash('admin123'), 'org_admin', 'TechCorp Global', 1, 4, 'TC-HR-101', 25000);
+  insertUser.run('Cafeteria Manager', 'admin@platos.com', '9000000000', hash('admin123'), 'admin', 'TechCorp Global', 1, 1, 'TC-FAC-01', 10000);
+  insertUser.run('Annapurna Kitchen (Vendor)', 'vendor1@platos.com', '9100000001', hash('vendor123'), 'vendor', null, 1, null, 'VND-001', 0);
+  insertUser.run('Spice Route Café (Vendor)', 'vendor2@platos.com', '9100000002', hash('vendor123'), 'vendor', null, 1, null, 'VND-002', 0);
+  insertUser.run('Chef Suresh (Kitchen KDS)', 'kitchen1@platos.com', '9100000003', hash('vendor123'), 'kitchen_staff', null, 1, null, 'KDS-001', 0);
+  insertUser.run('Rahul Sharma (Employee)', 'user1@platos.com', '9200000001', hash('user123'), 'customer', 'TechCorp Global', 1, 1, 'TC-ENG-482', 500);
+  insertUser.run('Priya Patel (Employee)', 'user2@platos.com', '9200000002', hash('user123'), 'customer', 'TechCorp Global', 1, 2, 'TC-PRD-204', 750);
+  insertUser.run('Amit Kumar (Employee)', 'user3@platos.com', '9200000003', hash('user123'), 'customer', 'TechCorp Global', 1, 3, 'TC-SLS-311', 300);
 
   // ── Vendors ──
-  const insertVendor = db.prepare('INSERT INTO vendors (user_id, name, description, logo, cuisine_type, rating, opening_time, closing_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-  insertVendor.run(2, 'Annapurna Kitchen', 'Authentic South & North Indian home-style meals prepared fresh daily', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80', 'Indian', 4.5, '07:30', '21:30');
-  insertVendor.run(3, 'Spice Route Café', 'Quick bites, beverages, and fusion snacks for the modern palate', 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80', 'Multi-Cuisine', 4.2, '08:00', '22:00');
+  const insertVendor = db.prepare(`
+    INSERT OR IGNORE INTO vendors (user_id, cafeteria_id, name, description, logo, cuisine_type, rating, is_active, verification_status, fssai_license, opening_time, closing_time)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  insertVendor.run(4, 1, 'Annapurna Kitchen', 'Authentic South & North Indian home-style meals prepared fresh daily', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80', 'Indian Traditional', 4.8, 1, 'verified', '10019043002847', '07:30', '21:30');
+  insertVendor.run(5, 1, 'Spice Route Café', 'Quick bites, gourmet coffees, and fusion bowls for tech park teams', 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80', 'Multi-Cuisine & Café', 4.5, 1, 'verified', '10020054001923', '08:00', '22:00');
 
   // ── Categories ──
   const insertCat = db.prepare('INSERT INTO categories (vendor_id, name, sort_order) VALUES (?, ?, ?)');
@@ -123,14 +162,46 @@ function runSeed(db) {
   insertAddon.run(29, 'Extra Chutney', 10);
 
   // ── Subsidies ──
-  const insertSubsidy = db.prepare('INSERT INTO subsidies (company, meal_type, amount, is_active) VALUES (?, ?, ?, ?)');
-  insertSubsidy.run('TechCorp', 'breakfast', 50, 1);
-  insertSubsidy.run('TechCorp', 'lunch', 100, 1);
-  insertSubsidy.run('TechCorp', 'dinner', 75, 1);
-  insertSubsidy.run('DesignHub', 'lunch', 80, 1);
-  insertSubsidy.run('DesignHub', 'snack', 30, 1);
+  const insertSubsidy = db.prepare('INSERT INTO subsidies (org_id, company, department_id, meal_type, amount, subsidy_percent, daily_cap, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  insertSubsidy.run(1, 'TechCorp Global', 1, 'breakfast', 60, 100, 150, 1);
+  insertSubsidy.run(1, 'TechCorp Global', 1, 'lunch', 100, 100, 200, 1);
+  insertSubsidy.run(1, 'TechCorp Global', 1, 'dinner', 80, 100, 150, 1);
+  insertSubsidy.run(1, 'TechCorp Global', 2, 'lunch', 120, 100, 250, 1);
+  insertSubsidy.run(2, 'Apex Health & Sciences', 5, 'lunch', 90, 80, 180, 1);
 
-  console.log('✅ Seed data inserted successfully with real images!');
+  // ── Wallet Transactions ──
+  const firstUser = db.prepare("SELECT id FROM users WHERE role = 'customer' LIMIT 1").get();
+  const testUserId = firstUser ? firstUser.id : 1;
+
+  const insertTx = db.prepare(`
+    INSERT INTO wallet_transactions (user_id, org_id, amount, type, balance_after, description, reference_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  insertTx.run(testUserId, 1, 500, 'credit_subsidy', 500, 'Monthly Corporate Food Allowance (TechCorp)', 'CR-SUB-101');
+  insertTx.run(testUserId, 1, -120, 'debit_order', 380, 'Dosa & Filter Coffee at Annapurna Kitchen', 'TX-ORD-902');
+  insertTx.run(testUserId, 1, 240, 'credit_self', 620, 'UPI Wallet Auto-Reload', 'PG-UPI-849');
+
+  // ── Vendor Settlements ──
+  const insertSettlement = db.prepare(`
+    INSERT INTO vendor_settlements (vendor_id, period_start, period_end, total_sales, platform_commission, net_payout, status, payment_reference)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  insertSettlement.run(1, '2026-11-01', '2026-11-15', 84500, 4225, 80275, 'processed', 'HDFC-NEFT-928371');
+  insertSettlement.run(1, '2026-11-16', '2026-11-23', 48200, 2410, 45790, 'processed', 'HDFC-NEFT-940182');
+  insertSettlement.run(2, '2026-11-01', '2026-11-15', 62400, 3120, 59280, 'processed', 'ICICI-RTGS-109283');
+
+  // ── Kitchen Inventory ──
+  const insertInv = db.prepare(`
+    INSERT INTO inventory_items (vendor_id, item_name, current_stock, min_threshold, unit, status)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertInv.run(1, 'Sona Masoori Rice (Basmati)', 120, 25, 'kg', 'in_stock');
+  insertInv.run(1, 'Fresh Malai Paneer', 18, 5, 'kg', 'in_stock');
+  insertInv.run(1, 'Filter Coffee Decoction Brew', 8, 10, 'liters', 'low_stock');
+  insertInv.run(2, 'Arabica Espresso Beans', 24, 6, 'kg', 'in_stock');
+  insertInv.run(2, 'Amul Salted Butter Cubes', 45, 10, 'kg', 'in_stock');
+
+  console.log('✅ Enterprise SaaS Seed data inserted successfully!');
 }
 
 module.exports = { runSeed };
