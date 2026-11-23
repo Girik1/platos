@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateWalletBalance } = useAuth();
   const {
     items,
     removeFromCart,
@@ -111,6 +111,17 @@ export default function CartPage() {
       });
 
       const order = res.data?.order || res.data;
+
+      // Update wallet balance in context and state immediately
+      if (paymentMethod === 'wallet') {
+        const nextBal = res.data?.updated_wallet_balance !== undefined
+          ? Number(res.data.updated_wallet_balance)
+          : Math.max(0, walletBalance - netPayable);
+        if (updateWalletBalance) {
+          updateWalletBalance(nextBal);
+        }
+      }
+
       clearCart();
       toast.success('Order placed successfully! Pickup OTP generated 🎉');
       navigate(`/orders/${order.id}`);
@@ -529,6 +540,20 @@ export default function CartPage() {
                     ₹{netPayable.toFixed(0)}
                   </span>
                 </div>
+
+                {/* Live Mathematical Wallet Impact */}
+                {paymentMethod === 'wallet' && (
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5 text-[11px] text-slate-600 mt-2">
+                    <div className="flex justify-between">
+                      <span>Current Food Wallet:</span>
+                      <span className="font-bold text-slate-800">₹{walletBalance.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-700 font-bold border-t border-slate-200 pt-1">
+                      <span>Balance After Order:</span>
+                      <span>₹{Math.max(0, walletBalance - netPayable).toFixed(0)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Checkout CTA Button with 52px Standard Enterprise Height */}

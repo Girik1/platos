@@ -26,8 +26,13 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Standalone in-memory order store for public preview
+// Standalone in-memory order store and wallet ledger for public preview
 let localOrders = [];
+let localTransactions = [
+  { id: 1, amount: 500, type: 'credit_subsidy', balance_after: 500, description: 'HR Monthly Food Allowance Grant', reference_id: 'SUB-CORP-9021', created_at: '2026-11-01T09:00:00Z' },
+  { id: 2, amount: 250, type: 'credit_self', balance_after: 750, description: 'UPI Recharge via Google Pay', reference_id: 'UPI-TXN-44812', created_at: '2026-11-12T14:30:00Z' },
+  { id: 3, amount: -180, type: 'debit_order', balance_after: 570, description: 'Meal Order #PLTS-8402 (Masala Dosa, Filter Coffee)', reference_id: 'PLTS-8402', created_at: '2026-11-18T13:15:00Z' },
+];
 
 // Resilience Fallback Interceptor
 API.interceptors.response.use(
@@ -103,10 +108,10 @@ API.interceptors.response.use(
         const company = currentUser.company || 'TechCorp';
         return Promise.resolve({
           data: {
-            eligible: true,
+            eligible: Boolean(company),
             company: company,
             mealType: 'lunch',
-            amount: 100,
+            amount: 80,
           },
         });
       }
@@ -140,21 +145,59 @@ API.interceptors.response.use(
         return Promise.resolve({ data: { user } });
       }
 
-      // 8. Place Order
+      // 8. Place Order with Precise Financial Math & Wallet Deduction
       if (url === '/orders' && method === 'post') {
         const body = JSON.parse(config.data || '{}');
         const clientItems = body.items || [];
-        const subtotal = clientItems.reduce((sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
-        const subsidy = Math.min(100, subtotal);
+        
+        // Exact calculation: Base Price + Addons Price * Quantity
+        const subtotal = clientItems.reduce((sum, i) => {
+          const addonSum = (i.addons || []).reduce((asum, a) => asum + (Number(a.price) || 0), 0);
+          const unitRate = (Number(i.price) || 0) + addonSum;
+          return sum + (unitRate * (Number(i.quantity) || 1));
+        }, 0);
+
+        const currentUser = JSON.parse(localStorage.getItem('platos_user') || '{}');
+        const subsidy = currentUser?.company ? Math.min(80, subtotal) : 0;
+        const netPayable = Math.max(0, subtotal - subsidy);
         const orderNumber = `PLTS-${Math.floor(1000 + Math.random() * 9000)}`;
         const otp = String(Math.floor(1000 + Math.random() * 9000));
+
+        let updatedBalance = Number(currentUser.wallet_balance !== undefined ? currentUser.wallet_balance : 500);
+
+        if ((body.payment_method === 'wallet' || !body.payment_method) && netPayable > 0) {
+          if (updatedBalance < netPayable) {
+            return Promise.reject({
+              response: {
+                data: {
+                  error: `Insufficient wallet balance. Total: ₹${netPayable.toFixed(0)}, Available: ₹${updatedBalance.toFixed(0)}. Please top up.`,
+                },
+              },
+            });
+          }
+          updatedBalance = updatedBalance - netPayable;
+          currentUser.wallet_balance = updatedBalance;
+          localStorage.setItem('platos_user', JSON.stringify(currentUser));
+
+          localTransactions.unshift({
+            id: Date.now(),
+            user_id: currentUser.id || 4,
+            amount: -netPayable,
+            type: 'debit_order',
+            balance_after: updatedBalance,
+            description: `Meal Order #${orderNumber} (${clientItems.map(i => i.name).slice(0, 2).join(', ')})`,
+            reference_id: orderNumber,
+            created_at: new Date().toISOString(),
+          });
+        }
 
         const newOrder = {
           id: Date.now(),
           order_number: orderNumber,
-          user_id: 4,
-          vendor_id: 1,
-          vendor_name: 'Annapurna Kitchen',
+          user_id: currentUser.id || 4,
+          user_name: currentUser.name || 'Rahul Sharma',
+          vendor_id: clientItems[0]?.vendor_id || 1,
+          vendor_name: clientItems[0]?.vendor_name || 'Annapurna Kitchen',
           total_amount: subtotal,
           subsidy_amount: subsidy,
           payment_method: body.payment_method || 'wallet',
@@ -164,16 +207,24 @@ API.interceptors.response.use(
           qr_code: 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(JSON.stringify({ orderNumber, otp })),
           special_instructions: body.special_instructions || '',
           created_at: new Date().toISOString(),
-          items: clientItems.map(i => ({
-            item_name: i.name,
-            item_price: i.price,
-            quantity: i.quantity,
-            addons_json: JSON.stringify(i.addons || []),
-          })),
+          items: clientItems.map(i => {
+            const addonSum = (i.addons || []).reduce((asum, a) => asum + (Number(a.price) || 0), 0);
+            return {
+              item_name: i.name,
+              item_price: (Number(i.price) || 0) + addonSum,
+              quantity: Number(i.quantity) || 1,
+              addons_json: JSON.stringify(i.addons || []),
+            };
+          }),
         };
 
         localOrders.unshift(newOrder);
-        return Promise.resolve({ data: { order: newOrder } });
+        return Promise.resolve({
+          data: {
+            order: newOrder,
+            updated_wallet_balance: updatedBalance,
+          },
+        });
       }
 
       // 9. Get Single Order Detail
@@ -341,14 +392,40 @@ API.interceptors.response.use(
 
       // 17. Finance & Settlements
       if (url.includes('/finance/wallet/transactions')) {
+        const currentUser = JSON.parse(localStorage.getItem('platos_user') || '{}');
+        const activeBal = Number(currentUser.wallet_balance !== undefined ? currentUser.wallet_balance : 500);
         return Promise.resolve({
           data: {
-            balance: 500,
-            transactions: [
-              { id: 1, amount: 500, type: 'credit_subsidy', balance_after: 500, description: 'Monthly Corporate Meal Allowance', reference_id: 'CR-SUB-101', created_at: '2026-11-01' },
-              { id: 2, amount: -120, type: 'debit_order', balance_after: 380, description: 'Dosa & Filter Coffee at Annapurna Kitchen', reference_id: 'TX-ORD-902', created_at: '2026-11-10' },
-              { id: 3, amount: 240, type: 'credit_self', balance_after: 620, description: 'UPI Wallet Top-up (GPay)', reference_id: 'PG-UPI-849', created_at: '2026-11-18' },
-            ],
+            balance: activeBal,
+            transactions: localTransactions,
+          },
+        });
+      }
+
+      if (url.includes('/finance/wallet/topup') && method === 'post') {
+        const body = JSON.parse(config.data || '{}');
+        const topupAmt = Number(body.amount) || 0;
+        const currentUser = JSON.parse(localStorage.getItem('platos_user') || '{}');
+        const prevBal = Number(currentUser.wallet_balance !== undefined ? currentUser.wallet_balance : 500);
+        const newBal = prevBal + topupAmt;
+        currentUser.wallet_balance = newBal;
+        localStorage.setItem('platos_user', JSON.stringify(currentUser));
+
+        localTransactions.unshift({
+          id: Date.now(),
+          amount: topupAmt,
+          type: 'credit_self',
+          balance_after: newBal,
+          description: `UPI Wallet Top-up (${body.payment_method || 'GPAY'})`,
+          reference_id: `UPI-TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+          created_at: new Date().toISOString(),
+        });
+
+        return Promise.resolve({
+          data: {
+            success: true,
+            newBalance: newBal,
+            message: `Added ₹${topupAmt} to wallet`,
           },
         });
       }

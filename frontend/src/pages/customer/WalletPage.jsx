@@ -17,7 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function WalletPage() {
-  const { user } = useAuth();
+  const { user, updateWalletBalance } = useAuth();
   const [balance, setBalance] = useState(user?.wallet_balance || 500);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,10 @@ export default function WalletPage() {
     try {
       setLoading(true);
       const res = await API.get('/finance/wallet/transactions');
-      if (res.data?.balance !== undefined) setBalance(res.data.balance);
+      if (res.data?.balance !== undefined) {
+        setBalance(res.data.balance);
+        if (updateWalletBalance) updateWalletBalance(res.data.balance);
+      }
       if (res.data?.transactions) setTransactions(res.data.transactions);
     } catch (_) {
       // offline fallback
@@ -55,7 +58,9 @@ export default function WalletPage() {
         amount,
         payment_method: upiMethod.toUpperCase(),
       });
-      setBalance(res.data?.newBalance || balance + Number(amount));
+      const nextBal = res.data?.newBalance !== undefined ? Number(res.data.newBalance) : balance + Number(amount);
+      setBalance(nextBal);
+      if (updateWalletBalance) updateWalletBalance(nextBal);
       toast.success(`Successfully added ₹${amount} via UPI!`);
       setTopupModal(false);
       fetchWalletLedger();

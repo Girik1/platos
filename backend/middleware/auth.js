@@ -26,10 +26,11 @@ function authorize(...roles) {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated.' });
     }
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    // super_admin has platform-wide authorization
+    if (req.user.role === 'super_admin' || roles.includes(req.user.role)) {
+      return next();
     }
-    next();
+    return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
   };
 }
 

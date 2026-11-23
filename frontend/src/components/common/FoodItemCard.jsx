@@ -69,33 +69,38 @@ export default function FoodItemCard({
         )}
       </div>
 
-      {/* Card Content & Details */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="mb-1">
-          <h3 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-[#FF6B35] transition-colors">
+      {/* Card Content & Details - Strict Vertical Proportions */}
+      <div className="p-4 flex flex-col flex-1 justify-between">
+        <div>
+          {/* Title with exact 2-line height */}
+          <h3 className="text-sm font-extrabold text-gray-900 line-clamp-2 min-h-[40px] leading-tight group-hover:text-[#FF6B35] transition-colors">
             {item.name}
           </h3>
-          {item.vendor_name && (
-            <p className="text-[11px] font-medium text-gray-400 truncate mt-0.5">
-              {item.vendor_name}
-            </p>
-          )}
+          
+          {/* Vendor Tag */}
+          <p className="text-[11px] font-semibold text-[#004E89] truncate mt-1">
+            {item.vendor_name || 'Campus Counter'}
+          </p>
+
+          {/* Description with exact 2-line height */}
+          <p className="text-xs text-gray-500 line-clamp-2 min-h-[34px] mt-1 mb-3 leading-relaxed">
+            {item.description || 'Prepared fresh with chef-curated ingredients.'}
+          </p>
         </div>
 
-        {/* Calculated min-height description to keep bottom row mathematically aligned */}
-        <p className="text-xs text-gray-500 line-clamp-2 min-h-[32px] mb-3 leading-relaxed">
-          {item.description || 'Prepared fresh in the cafeteria live counter with standard hygienic ingredients.'}
-        </p>
-
-        {/* Bottom Action Row */}
-        <div className="mt-auto pt-2.5 border-t border-gray-100 flex items-center justify-between">
+        {/* Bottom Action Row with perfect alignment */}
+        <div className="pt-3 border-t border-gray-100 flex items-center justify-between min-h-[46px]">
           <div className="flex flex-col">
-            <span className="text-base font-black text-[#004E89] tracking-tight">
+            <span className="text-base font-black text-gray-900 tracking-tight tabular-nums">
               ₹{Number(item.price).toFixed(0)}
             </span>
-            {hasAddons && (
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Customizable
+            {hasAddons ? (
+              <span className="text-[9px] font-extrabold text-orange-600 uppercase tracking-wider">
+                + Custom Addons
+              </span>
+            ) : (
+              <span className="text-[9px] font-medium text-gray-400">
+                Inclusive of GST
               </span>
             )}
           </div>

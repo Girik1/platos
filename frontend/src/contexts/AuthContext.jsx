@@ -74,6 +74,15 @@ export function AuthProvider({ children }) {
     return u;
   };
 
+  const updateWalletBalance = (newBalance) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, wallet_balance: Number(newBalance) };
+      localStorage.setItem('platos_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -84,6 +93,7 @@ export function AuthProvider({ children }) {
       register,
       logout,
       updateProfile,
+      updateWalletBalance,
     }}>
       {children}
     </AuthContext.Provider>

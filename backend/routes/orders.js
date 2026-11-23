@@ -112,11 +112,44 @@ router.post('/', authenticate, async (req, res) => {
     const qrData = JSON.stringify({ orderNumber, otp });
     const qrCode = await QRCode.toDataURL(qrData);
 
+    const netPayable = Math.max(0, totalAmount - subsidyAmount);
+    let updatedWalletBalance = undefined;
+
+    // Strict mathematical wallet verification & debit
+    if ((payment_method === 'wallet' || !payment_method) && netPayable > 0) {
+      const userRec = db.prepare('SELECT wallet_balance FROM users WHERE id = ?').get(req.user.id);
+      const currentBal = Number(userRec?.wallet_balance || 0);
+      if (currentBal < netPayable) {
+        return res.status(400).json({
+          error: `Insufficient wallet balance. Total required: ₹${netPayable.toFixed(0)}, your available balance: ₹${currentBal.toFixed(0)}. Please choose UPI or top-up your wallet.`
+        });
+      }
+      updatedWalletBalance = currentBal - netPayable;
+      db.prepare('UPDATE users SET wallet_balance = ? WHERE id = ?').run(updatedWalletBalance, req.user.id);
+
+      try {
+        db.prepare(`
+          INSERT INTO wallet_transactions (user_id, amount, type, balance_after, description, reference_id)
+          VALUES (?, ?, 'debit_order', ?, ?, ?)
+        `).run(
+          req.user.id,
+          netPayable,
+          updatedWalletBalance,
+          `Meal Order #${orderNumber}`,
+          orderNumber
+        );
+      } catch (_) {
+        // Table fallback if schema varies
+      }
+    }
+
+    const paymentStatus = payment_method === 'cash' ? 'pending' : 'paid';
+
     const orderResult = db.prepare(`
-      INSERT INTO orders (user_id, vendor_id, order_number, total_amount, subsidy_amount, payment_method, pickup_otp, qr_code, special_instructions)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (user_id, vendor_id, order_number, total_amount, subsidy_amount, payment_method, payment_status, pickup_otp, qr_code, special_instructions)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(req.user.id, vendorId, orderNumber, totalAmount, subsidyAmount,
-      payment_method || 'wallet', otp, qrCode, special_instructions || null);
+      payment_method || 'wallet', paymentStatus, otp, qrCode, special_instructions || null);
 
     const orderId = orderResult.lastInsertRowid;
     const insertOrderItem = db.prepare(
@@ -138,7 +171,10 @@ router.post('/', authenticate, async (req, res) => {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
     const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
 
-    res.status(201).json({ order: { ...order, items } });
+    res.status(201).json({
+      order: { ...order, items },
+      updated_wallet_balance: updatedWalletBalance,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
