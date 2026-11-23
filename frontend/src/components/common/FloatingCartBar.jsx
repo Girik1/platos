@@ -9,7 +9,7 @@ export default function FloatingCartBar() {
   if (cartCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-xl z-40 select-none">
+    <div className="fixed bottom-5 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-xl z-40 select-none pb-[env(safe-area-inset-bottom,0px)]">
       <button
         type="button"
         onClick={() => navigate('/cart')}

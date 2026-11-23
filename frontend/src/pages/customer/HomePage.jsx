@@ -164,8 +164,8 @@ export default function HomePage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search dishes (e.g. Masala Dosa, Biryani, Coffee) or cafeteria..."
-                  className="w-full h-full pl-3 pr-2 text-sm text-gray-900 bg-transparent focus:outline-none placeholder-gray-400"
+                  placeholder="Search dishes (e.g. Dosa, Biryani, Coffee) or cafeteria..."
+                  className="w-full h-full pl-3 pr-2 text-xs sm:text-sm text-gray-900 bg-transparent focus:outline-none placeholder-gray-400"
                 />
                 {searchQuery && (
                   <button
@@ -178,9 +178,10 @@ export default function HomePage() {
                 )}
                 <button
                   type="submit"
-                  className="h-10 px-5 rounded-xl bg-[#FF6B35] hover:bg-[#e55a28] text-white font-bold text-xs uppercase tracking-wider shrink-0 shadow-sm transition-all"
+                  className="h-10 px-3.5 sm:px-5 rounded-xl bg-[#FF6B35] hover:bg-[#e55a28] text-white font-bold text-xs uppercase tracking-wider shrink-0 shadow-sm transition-all"
                 >
-                  Find Food
+                  <span className="hidden xs:inline sm:inline">Find Food</span>
+                  <span className="xs:hidden sm:hidden">Find</span>
                 </button>
               </div>
             </form>
@@ -208,7 +209,7 @@ export default function HomePage() {
 
         {/* Category Filter Pills (Height 40px, mathematically engineered) */}
         <section>
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.id;
               return (

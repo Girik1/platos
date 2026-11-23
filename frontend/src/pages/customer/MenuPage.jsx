@@ -173,8 +173,8 @@ export default function MenuPage() {
 
       {/* Control Strip (Search & Filter) */}
       <div className="sticky top-16 z-30 bg-white border-b border-gray-200/80 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Search Input */}
             <div className="relative flex-1 h-10">
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -183,7 +183,7 @@ export default function MenuPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={`Search ${vendor.name} menu...`}
-                className="w-full h-full pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all"
+                className="w-full h-full pl-9 sm:pl-10 pr-3 sm:pr-4 rounded-xl bg-gray-50 border border-gray-200 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all"
               />
             </div>
 
@@ -191,20 +191,21 @@ export default function MenuPage() {
             <button
               type="button"
               onClick={() => setVegOnly(!vegOnly)}
-              className={`inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border shrink-0 ${
+              className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 h-10 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border shrink-0 ${
                 vegOnly
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-400 shadow-xs'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
               }`}
             >
-              <Leaf className={`w-4 h-4 ${vegOnly ? 'text-emerald-600' : 'text-gray-400'}`} />
-              <span>Veg Only</span>
+              <Leaf className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${vegOnly ? 'text-emerald-600' : 'text-gray-400'}`} />
+              <span className="hidden xs:inline sm:inline">Veg Only</span>
+              <span className="xs:hidden sm:hidden">Veg</span>
             </button>
           </div>
 
           {/* Category Tabs (Mathematical Horizontal Rhythm) */}
           {categories.length > 0 && !searchQuery && (
-            <div className="flex gap-2 overflow-x-auto pt-3 pb-1 scrollbar-hide border-t border-gray-100 mt-3">
+            <div className="flex gap-2 overflow-x-auto pt-2.5 pb-1 scrollbar-hide border-t border-gray-100 mt-2.5 -mx-4 px-4 sm:mx-0 sm:px-0">
               <button
                 type="button"
                 onClick={() => setActiveCategoryId('all')}

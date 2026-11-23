@@ -226,7 +226,7 @@ export default function ItemDetailModal({ item, isOpen, onClose }) {
         </div>
 
         {/* Modal Footer with Engineered CTA Button */}
-        <div className="p-4 sm:p-5 border-t border-gray-100 bg-white shrink-0">
+        <div className="p-4 sm:p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] border-t border-gray-100 bg-white shrink-0">
           <button
             type="button"
             onClick={handleAddToCart}

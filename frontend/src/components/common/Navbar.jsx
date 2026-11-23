@@ -278,95 +278,172 @@ export default function Navbar() {
             {/* Mobile Hamburger Toggle */}
             <button
               type="button"
-              className="md:hidden p-2 text-gray-600 rounded-lg hover:bg-gray-100"
+              className="md:hidden p-2 text-gray-600 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle Navigation"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {menuOpen ? <X className="w-5 h-5 text-gray-800" /> : <Menu className="w-5 h-5 text-gray-800" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Enhanced Mobile Navigation Drawer */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1.5 shadow-lg">
-          {user?.role === 'customer' && (
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-3 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
+          {isAuthenticated ? (
             <>
-              <Link
-                to="/"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Campus Menu
-              </Link>
-              <Link
-                to="/orders"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                My Orders
-              </Link>
-            </>
-          )}
+              {/* User Identity Card */}
+              <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1A1A2E] to-[#004E89] text-white font-black text-sm flex items-center justify-center shadow-xs">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">{user?.name}</p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{user?.email}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded bg-orange-100 text-[#FF6B35] uppercase tracking-wider">
+                        {user?.role}
+                      </span>
+                      {user?.company && (
+                        <span className="text-[10px] font-bold text-gray-500">
+                          {user.company}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-          {user?.role === 'vendor' && (
-            <>
-              <Link
-                to="/vendor/dashboard"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Kitchen Orders
-              </Link>
-              <Link
-                to="/vendor/orders"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Order Handover
-              </Link>
-              <Link
-                to="/vendor/menu"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Menu Management
-              </Link>
-            </>
-          )}
+                {user?.role === 'customer' && (
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Food Wallet</span>
+                    <span className="text-sm font-black text-emerald-700">₹{Number(user?.wallet_balance || 0).toFixed(0)}</span>
+                  </div>
+                )}
+              </div>
 
-          {user?.role === 'admin' && (
-            <>
-              <Link
-                to="/admin/dashboard"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/admin/vendors"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Vendors
-              </Link>
-              <Link
-                to="/admin/users"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                Users & Subsidies
-              </Link>
-              <Link
-                to="/admin/orders"
-                onClick={() => setMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-gray-800"
-              >
-                All Orders
-              </Link>
+              {/* Navigation Options */}
+              <div className="space-y-1">
+                {user?.role === 'customer' && (
+                  <>
+                    <Link
+                      to="/"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+                      <span>Campus Menu & Food Courts</span>
+                    </Link>
+                    <Link
+                      to="/orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-orange-500" />
+                      <span>My Orders & Live Pickup</span>
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <UserCircle className="w-4 h-4 text-orange-500" />
+                      <span>My Profile</span>
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'vendor' && (
+                  <>
+                    <Link
+                      to="/vendor/dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-orange-500" />
+                      <span>Live Kitchen KDS</span>
+                    </Link>
+                    <Link
+                      to="/vendor/orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-orange-500" />
+                      <span>Order Handover & OTP</span>
+                    </Link>
+                    <Link
+                      to="/vendor/menu"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+                      <span>Menu & Pricing</span>
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'admin' && (
+                  <>
+                    <Link
+                      to="/admin/dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-orange-500" />
+                      <span>Analytics Dashboard</span>
+                    </Link>
+                    <Link
+                      to="/admin/vendors"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Building2 className="w-4 h-4 text-orange-500" />
+                      <span>Cafeterias & Vendors</span>
+                    </Link>
+                    <Link
+                      to="/admin/users"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <UserCircle className="w-4 h-4 text-orange-500" />
+                      <span>Users & Meal Subsidies</span>
+                    </Link>
+                    <Link
+                      to="/admin/orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3.5 h-11 rounded-xl text-xs font-bold text-gray-800 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-orange-500" />
+                      <span>All Cafeteria Orders</span>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Sign Out CTA */}
+              <div className="pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full h-11 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out of Account</span>
+                </button>
+              </div>
             </>
+          ) : (
+            <div className="space-y-3 py-2">
+              <p className="text-xs text-gray-500">Sign in to order and redeem your corporate meal subsidy.</p>
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="w-full h-11 rounded-xl bg-[#FF6B35] hover:bg-[#e55a28] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center shadow-md transition-colors"
+              >
+                Sign In / Demo Login
+              </Link>
+            </div>
           )}
         </div>
       )}
